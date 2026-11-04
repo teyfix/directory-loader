@@ -1,0 +1,21 @@
+plugins:
+  - prettier-plugin-sort-json
+  - prettier-plugin-packagejson
+  - prettier-plugin-compact-markdown-table
+  - prettier-plugin-sh
+  - prettier-plugin-toml
+jsonRecursiveSort: true
+printWidth: 80
+objectWrap: collapse
+proseWrap: always
+tabWidth: 2
+singleQuote: true
+trailingComma: all
+overrides:
+  - files: '*.md'
+    options:
+      parser: markdown
+      printWidth: 10000
+  - files: '*.{yaml,yml}'
+    options:
+      printWidth: 1000

@@ -1,0 +1,14 @@
+glob_matcher: doublestar
+pre-commit:
+  piped: true
+  jobs:
+    - name: prettier
+      glob: '**/*.{json,jsonc,json5,yaml,yml,md,toml,sh}'
+      exclude: '**/{.cache,.state,node_modules,dist,coverage}/**'
+      run: docker compose run --rm bun --bun prettier --write -- {staged_files}
+      stage_fixed: true
+    - name: biome
+      glob: '**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}'
+      exclude: '**/{.cache,.state,node_modules,dist,coverage}/**'
+      run: docker compose run --rm bun --bun biome check --write --no-errors-on-unmatched -- {staged_files}
+      stage_fixed: true

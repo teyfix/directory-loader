@@ -1,0 +1,2 @@
+include:
+  - svc/bun/compose.yaml

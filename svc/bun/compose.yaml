@@ -1,0 +1,18 @@
+services:
+  bun:
+    build:
+      context: ${PWD}
+      dockerfile: ${PWD}/svc/bun/Dockerfile
+    image: directory-loader:tools
+    working_dir: /workspace
+    user: '${BUN_UID:-1000}:${BUN_GID:-1000}'
+    init: true
+    cpus: 2
+    mem_limit: 2g
+    environment:
+      HOME: /home/bun
+      BUN_INSTALL_CACHE_DIR: /cache/downloads
+    volumes:
+      - ${PWD}:/workspace
+      - ${PWD}/.cache/bun:/cache
+    entrypoint: [bun]

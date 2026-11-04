@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.cache/
+.state/
+bun.lock
+coverage/
+**/*.js
+**/*.jsx
+**/*.ts
+**/*.tsx
+**/*.mjs
+**/*.cjs
+**/*.mts
+**/*.cts

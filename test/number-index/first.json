@@ -1,12 +1,1 @@
-{
-  "lorem": {
-    "ipsum": {
-      "0": {
-        "foo": "bar"
-      },
-      "10": {
-        "bar": "baz"
-      }
-    }
-  }
-}
+{ "lorem": { "ipsum": { "0": { "foo": "bar" }, "10": { "bar": "baz" } } } }

@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "module": "nodenext",
-    "lib": ["es2017", "es7", "es6", "dom"],
-    "jsx": "react",
-    "declaration": true,
-    "outDir": "dist",
+    "allowArbitraryExtensions": true,
+    "allowImportingTsExtensions": true,
+    "lib": ["ESNext"],
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
     "strict": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "skipLibCheck": true
+    "target": "ESNext",
+    "types": ["bun"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

@@ -1,9 +1,0 @@
-.eslintignore
-.eslintrc.js
-.github
-.husky
-.prettierrc
-jest.config.js
-src
-test
-tsconfig.json
