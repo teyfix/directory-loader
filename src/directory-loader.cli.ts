@@ -3,6 +3,7 @@ import { createCLI, defineCommand, option } from '@bunli/core';
 import { z } from 'zod';
 import { version } from '../package.json';
 import directoryLoader from './directory-loader.factory';
+import { runPipeline } from './pipeline-runner.utils';
 import { watch } from './watch-command.utils';
 
 export async function main(args = Bun.argv.slice(2)): Promise<void> {
@@ -51,6 +52,24 @@ export async function main(args = Bun.argv.slice(2)): Promise<void> {
         if (flags.split) loader.split();
         if (flags.output) await loader.write(flags.output);
         else console.log(JSON.stringify(await loader.load(), null, 2));
+      },
+    }),
+  );
+  cli.command(
+    defineCommand({
+      name: 'run',
+      description:
+        'Execute a pipeline file and optionally watch its discovered inputs.',
+      options: {
+        watch: option(z.boolean().default(false), {
+          short: 'w',
+          argumentKind: 'flag',
+          description: 'Rerun the pipeline through watchexec',
+        }),
+      },
+      handler: async ({ positional, flags, signal }) => {
+        const file = z.array(z.string()).length(1).parse(positional)[0];
+        if (file) await runPipeline(file, flags.watch, signal);
       },
     }),
   );

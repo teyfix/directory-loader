@@ -3,9 +3,14 @@ import { exportCatalogue } from './catalogue-export.utils';
 import { type Codec, codecs, type Parser } from './codecs.registry';
 import { createMerger, isRecord, type Override } from './merge.utils';
 import { globPattern, relativePath } from './path-pattern.utils';
+import type { PathTransform } from './path-transform.utils';
 
 export type Source = { file: string; path: readonly string[] };
 type Mapper = (value: unknown, source: Source) => unknown | Promise<unknown>;
+export type Validator = (data: Record<string, unknown>) => void | Promise<void>;
+export type Execution = Promise<Record<string, unknown>> & {
+  loader: DirectoryLoader;
+};
 
 export default class DirectoryLoader {
   private readonly parsers = new Map<string, Parser>();
@@ -17,7 +22,8 @@ export default class DirectoryLoader {
   private readonly mappers: Mapper[] = [];
   private emitTypes = false;
   private splitOutput = false;
-  private mount = (source: Source): readonly string[] => source.path;
+  private readonly mounts: PathTransform[] = [];
+  private readonly validators: Validator[] = [];
   private warning = (event: Override) =>
     console.warn(
       `${event.source} overrides ${event.path.join('.')} from ${event.previous}`,
@@ -87,9 +93,25 @@ export default class DirectoryLoader {
     return this;
   }
 
-  path(mapper: (source: Source) => readonly string[]): this {
-    this.mount = mapper;
+  path(...mappers: PathTransform[]): this {
+    this.mounts.push(...mappers);
     return this;
+  }
+
+  validate(validator: Validator): this {
+    this.validators.push(validator);
+    return this;
+  }
+
+  watchPlan(): { inputs: string[]; excluded: string[] } {
+    if (!this.root) throw new Error('Root directory is not defined');
+    const root = this.root;
+    return {
+      inputs: this.patterns.map((pattern) =>
+        resolve(root, globPattern(pattern)),
+      ),
+      excluded: this.excluded.map((pattern) => resolve(root, pattern)),
+    };
   }
 
   onOverride(handler: (event: Override) => void): this {
@@ -107,7 +129,11 @@ export default class DirectoryLoader {
     return this;
   }
 
-  async write(output: string): Promise<Record<string, unknown>> {
+  write(output: string): Execution {
+    return Object.assign(this.writeOutput(output), { loader: this });
+  }
+
+  private async writeOutput(output: string): Promise<Record<string, unknown>> {
     if (this.root) {
       const path = relative(this.root, resolve(output)).replaceAll('\\', '/');
       if (!path) throw new Error('Output must not be the input directory');
@@ -140,7 +166,11 @@ export default class DirectoryLoader {
     return value;
   }
 
-  async load(): Promise<Record<string, unknown>> {
+  load(): Execution {
+    return Object.assign(this.read(), { loader: this });
+  }
+
+  private async read(): Promise<Record<string, unknown>> {
     if (!this.root) throw new Error('Root directory is not defined');
     if (!this.parsers.size) throw new Error('No loader provided');
     const root = this.root;
@@ -182,7 +212,9 @@ export default class DirectoryLoader {
             );
             for (const mapper of this.mappers)
               value = await mapper(value, source);
-            const path = this.mount(source);
+            let path = source.path;
+            for (const mapper of this.mounts)
+              path = [...mapper({ ...source, path })];
             if (path.some((key) => typeof key !== 'string' || !key.length))
               throw new Error('Mount paths must contain non-empty strings');
             const contribution = path.reduceRight<unknown>(
@@ -200,6 +232,7 @@ export default class DirectoryLoader {
       for (const { source, contribution } of batch)
         result = merge(result, contribution, source.file);
     }
+    for (const validator of this.validators) await validator(result);
     return result;
   }
 }

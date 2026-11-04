@@ -21,15 +21,16 @@ await directoryLoader('messages').files('[lang].yaml', '[lang]/**/*.yaml').types
 
 `messages/en/home.yaml` contributes its parsed contents at `en.home`. `messages/en/home/meta.yaml` contributes at `en.home.meta`. Broader files are loaded before deeper files, then in lexical path order. A deeper file can replace `meta.title` while retaining `meta.description` from the broader file. Changed existing values produce a warning naming the object path and both files. Arrays replace earlier arrays. File parsing can run concurrently; merging follows the deterministic file order.
 
-The example writes `generated/en.json`, `generated/en.d.json.ts`, and corresponding files for other top-level keys. Without `.split()`, `.write('messages.json')` exports the entire object. `.load()` returns it without writing anything. Unchanged output is not rewritten. A hidden output manifest tracks generated files so subsequent runs remove obsolete outputs while preserving unrelated files. Use a dedicated output directory for each split pipeline.
+The example writes `generated/en.json`, `generated/en.d.json.ts`, corresponding files for other top-level keys, and a generated `index.ts` exporting `catalogues` and `Messages`. Without `.split()`, `.write('messages.json')` exports the entire object. `.load()` returns it without writing anything. Unchanged output is not rewritten. A hidden output manifest tracks generated files so subsequent runs remove obsolete outputs while preserving unrelated files. Use a dedicated output directory for each split pipeline.
 
 ```mermaid
 flowchart LR
   P[Patterns] --> C[Native codecs]
   C --> M[Chained value and path transforms]
   M --> D[Ordered deep merge and source warnings]
-  D --> L[load: native object]
-  D --> W[write: JSON and optional literal types]
+  D --> V[Optional assembled validators]
+  V --> L[load: native object]
+  V --> W[write: JSON, index and optional literal types]
 ```
 
 ## Chained API
@@ -44,7 +45,8 @@ flowchart LR
 |`remove(extension)`|Remove the selected codec and its registered aliases.|
 |`clear()`|Remove all codecs.|
 |`map((value, source) => value)`|Transform each parsed value; async functions are supported. Runs in registration order.|
-|`path(source => segments)`|Change the mount path; an empty path merges an object at the root.|
+|`path(...transforms)`|Compose mount-path transforms in registration order; an empty path merges an object at the root.|
+|`validate(validator)`|Validate the assembled object before returning or writing; async validators are awaited in registration order.|
 |`onOverride(event => ...)`|Handle `{path, previous, source}` instead of the default warning.|
 |`openFiles(limit)`|Limit concurrent file parsing; default 32.|
 |`maxFiles(limit)`|Limit the number of discovered files loaded; default unlimited.|
@@ -75,7 +77,43 @@ const data = await directoryLoader('src/feat')
 // auth/messages.en.yaml -> en.auth
 ```
 
-`[lang]` is a wildcard alias, not locale validation or a captured variable. Standard glob patterns work too. This syntax reserves bracketed names; use `?`, `*` or brace alternatives instead of alphabetic bracket character classes. Keys and path casing are preserved. The loader imposes no locale list, i18n schema, plural rules, or fallback policy. See the [i18n compatibility audit](docs/i18n-compatibility.md) before connecting a runtime.
+`[lang]` is a wildcard alias, not locale validation or a captured variable. Standard glob patterns work too. This syntax reserves bracketed names; use `?`, `*` or brace alternatives instead of alphabetic bracket character classes. Keys and path casing are preserved. The core loader imposes no locale list, i18n schema, plural rules, or fallback policy. Opt into message checks with the separate ICU validator. See the [i18n compatibility audit](docs/i18n-compatibility.md) before connecting a runtime.
+
+## Path helpers and pipeline files
+
+Path transforms use the same callback contract as `.path()`, and compose across repeated calls. `stripSegments(...names)` removes matching directory names. `recaseSegments(casing, skip)` uses `change-case`, with `skip` preserving leading segments such as locale identifiers. `redirectPaths(mapping)` redirects slash-delimited path suffixes, preserving any prefix; the longest matching suffix wins.
+
+```ts
+// messages.compile.ts
+import directoryLoader, { redirectPaths, stripSegments, recaseSegments } from '@teyfix/directory-loader';
+import { icu } from '@teyfix/directory-loader/icu';
+
+export default directoryLoader('messages')
+  .files('[lang].yaml', '[lang]/**/*.yaml')
+  .path(redirectPaths({ 'studio/output/components/workbench': 'studio/output' }))
+  .path(stripSegments('components'), recaseSegments('camel', 1))
+  .validate(icu({ referenceLocale: 'en', locales: ['en', 'tr'] }))
+  .types()
+  .split()
+  .write('src/i18n/generated');
+```
+
+All relative paths in a pipeline resolve from the pipeline file's directory. Export the `.write()` or `.load()` execution directly, as above; it is an ordinary awaitable Promise carrying its loader's watch inputs. A synchronous default function returning that execution is also supported. Do not await it before exporting or wrap it in an async function when using watch, because that discards the watch metadata.
+
+```sh
+bun --bun directory-loader run messages.compile.ts
+bun --bun directory-loader run messages.compile.ts --watch
+```
+
+The generated index removes handwritten catalogue imports:
+
+```ts
+import { catalogues, type Messages } from './i18n/generated';
+```
+
+The index imports all emitted catalogues eagerly. For lazy locale loading, import individual JSON files instead. `Messages` is the union of catalogue value types; with `.types()` it preserves each locale's message literals.
+
+`icu({referenceLocale, locales?})` delegates ICU parsing to FormatJS and validates string-only message trees, equal message keys, typed argument signatures, and rich-tag names. Locale-specific plural categories may differ. `locales` requires those locales to exist; without it, all discovered locales are checked against the required reference locale. It does not interpret ARB metadata, i18next-native interpolation, custom format types, or fallback policy. Use your own `.validate(fn)` for other domains. A thrown error or rejected validator prevents output replacement.
 
 ## CLI and watch
 
@@ -87,9 +125,9 @@ bun --bun directory-loader load '**/messages.[lang].yaml' \
   --root src/feat --output feature-messages.json --watch
 ```
 
-The CLI provides the default path layout. Use the library chain in a script when you need custom path or value transforms. Bunli provides `load --help`, validation, and diagnostics. Without `--output`, the result is written to stdout.
+The `load` command provides the default path layout. The `run` command executes the exported chain when you need custom transforms or validators. Bunli provides `load --help`, validation, and diagnostics. Without `--output`, the result is written to stdout.
 
-`--watch` requires `watchexec` on PATH. It derives watch roots and filters from the supplied patterns, runs the same CLI without watch, and queues full reruns. It does not implement an internal watcher or incremental compiler. Generated outputs are ignored by the watcher. Build, test and typecheck commands should invoke compilation directly rather than depend on a running watcher.
+`--watch` requires `watchexec` on PATH. It derives watch roots and filters from the supplied patterns, runs the same CLI without watch, and queues full reruns. It does not implement an internal watcher or incremental compiler. Generated outputs are ignored by the watcher. Pipeline watch also watches the pipeline file itself. It executes once to discover the chain and watchexec then performs its initial run, so startup can compile twice without rewriting unchanged output. Watch roots are discovered once; restart watch after changing the pipeline to add new input roots or patterns. Build, test and typecheck commands should invoke compilation directly rather than depend on a running watcher.
 
 For JSON imports:
 

@@ -7,6 +7,12 @@ export default function directoryLoader(
 }
 
 export { type Codec, codecs, type Parser } from './codecs.registry';
-export type { Source } from './directory-loader.class';
+export type { Execution, Source, Validator } from './directory-loader.class';
 export type { Override } from './merge.utils';
+export type { PathTransform } from './path-transform.utils';
+export {
+  recaseSegments,
+  redirectPaths,
+  stripSegments,
+} from './path-transform.utils';
 export { DirectoryLoader };

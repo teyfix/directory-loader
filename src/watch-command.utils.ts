@@ -8,35 +8,27 @@ type WatchFlags = {
   split: boolean;
 };
 
-export async function watch(
-  patterns: string[],
-  flags: WatchFlags,
-  signal: AbortSignal,
-): Promise<number> {
+export async function watchFiles(options: {
+  inputs: readonly string[];
+  excluded: readonly string[];
+  command: readonly string[];
+  cwd: string;
+  signal: AbortSignal;
+}): Promise<number> {
   if (!Bun.which('watchexec'))
     throw new Error('--watch requires watchexec on PATH');
-  const cwd = resolve(flags.root);
-  const inputs = patterns.map((pattern) => resolve(cwd, globPattern(pattern)));
-  const roots = [...new Set(inputs.map(watchRoot))];
-  const output = flags.output ? resolve(flags.output) : undefined;
-  if (output && roots.some((root) => root === output))
-    throw new Error('Output must not be a watch root');
+  const roots = [...new Set(options.inputs.map(watchRoot))];
   const command = [
     'watchexec',
     '--on-busy-update',
     'queue',
     '--shell=none',
     ...roots.flatMap((root) => ['--watch', root]),
-    ...inputs.flatMap((pattern) => ['--filter', relative(cwd, pattern)]),
-  ];
-  if (flags.output)
-    command.push(
-      '--ignore',
-      resolve(flags.output),
-      '--ignore',
-      `${resolve(flags.output)}.*`,
-    );
-  command.push(
+    ...options.inputs.flatMap((pattern) => [
+      '--filter',
+      relative(options.cwd, pattern),
+    ]),
+    ...options.excluded.flatMap((pattern) => ['--ignore', pattern]),
     '--ignore',
     '**/*.d.json.ts',
     '--ignore',
@@ -45,25 +37,44 @@ export async function watch(
     '**/.directory-loader.outputs.json',
     '--ignore',
     '**/*.tmp',
-  );
-  command.push(
-    '--',
+  ];
+  command.push('--', ...options.command);
+  const child = Bun.spawn(command, {
+    cwd: options.cwd,
+    stdin: 'inherit',
+    stdout: 'inherit',
+    stderr: 'inherit',
+    signal: options.signal,
+  });
+  return await child.exited;
+}
+
+export async function watch(
+  patterns: string[],
+  flags: WatchFlags,
+  signal: AbortSignal,
+): Promise<number> {
+  const cwd = resolve(flags.root);
+  const inputs = patterns.map((pattern) => resolve(cwd, globPattern(pattern)));
+  const output = flags.output ? resolve(flags.output) : undefined;
+  if (output && inputs.some((pattern) => watchRoot(pattern) === output))
+    throw new Error('Output must not be a watch root');
+  const command = [
     process.execPath,
     resolve(Bun.argv[1] ?? import.meta.path),
     'load',
     '--root',
     cwd,
-  );
-  if (flags.output) command.push('--output', resolve(flags.output));
+  ];
+  if (output) command.push('--output', output);
   if (flags.types) command.push('--types');
   if (flags.split) command.push('--split');
   command.push('--', ...patterns);
-  const child = Bun.spawn(command, {
+  return watchFiles({
+    inputs,
+    excluded: output ? [output, `${output}.*`] : [],
+    command,
     cwd,
-    stdin: 'inherit',
-    stdout: 'inherit',
-    stderr: 'inherit',
     signal,
   });
-  return await child.exited;
 }

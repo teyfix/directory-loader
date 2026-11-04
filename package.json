@@ -1,6 +1,6 @@
 {
   "name": "@teyfix/directory-loader",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Compose structured files into a deeply merged object with a Bun-native chained pipeline.",
   "keywords": [
@@ -20,6 +20,10 @@
     ".": {
       "types": "./src/directory-loader.factory.ts",
       "import": "./src/directory-loader.factory.ts"
+    },
+    "./icu": {
+      "types": "./src/icu-validator.factory.ts",
+      "import": "./src/icu-validator.factory.ts"
     }
   },
   "bin": {
@@ -31,7 +35,7 @@
     "docs"
   ],
   "scripts": {
-    "build": "bun build src/directory-loader.factory.ts src/directory-loader.cli.ts --target=bun --outdir=dist",
+    "build": "bun build src/directory-loader.factory.ts src/directory-loader.cli.ts src/icu-validator.factory.ts --target=bun --outdir=dist",
     "check": "bun check",
     "format": "bun run format:biome && bun run format:prettier",
     "format:biome": "bun --bun biome check --write src test",
@@ -43,12 +47,15 @@
   },
   "dependencies": {
     "@bunli/core": "0.9.1",
+    "@formatjs/icu-messageformat-parser": "3.5.22",
+    "change-case": "5.4.4",
     "deepmerge-ts": "8.0.2",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
     "@types/bun": "1.4.4",
+    "@types/node": "26.6.6",
     "lefthook": "2.2.2",
     "prettier": "3.9.10",
     "prettier-plugin-compact-markdown-table": "0.1.0",
