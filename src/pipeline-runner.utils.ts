@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import DirectoryLoader from './directory-loader.class';
+import type DirectoryLoader from './directory-loader.class';
 import { watchFiles } from './watch-command.utils';
 
 export async function runPipeline(
@@ -11,7 +11,7 @@ export async function runPipeline(
   const script = resolve(file);
   const cwd = dirname(script);
   const previous = process.cwd();
-  let loader: DirectoryLoader | undefined;
+  let loader: Pick<DirectoryLoader, 'watchPlan'> | undefined;
   let failure: { error: unknown } | undefined;
   process.chdir(cwd);
   try {
@@ -20,7 +20,8 @@ export async function runPipeline(
       typeof pipeline.default === 'function'
         ? pipeline.default()
         : pipeline.default;
-    if (execution?.loader instanceof DirectoryLoader) loader = execution.loader;
+    if (typeof execution?.loader?.watchPlan === 'function')
+      loader = execution.loader;
     await execution;
   } catch (error) {
     failure = { error };
