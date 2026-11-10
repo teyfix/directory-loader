@@ -13,6 +13,8 @@ Install directly from Git; no npm publication or dependency build step is needed
 { "dependencies": { "@teyfix/directory-loader": "git+https://github.com/teyfix/directory-loader.git" } }
 ```
 
+For repeated multi-output generation, use an optional [`.directory-loader.yaml`](docs/pipeline-config.md): `bun --bun directory-loader run` discovers it automatically, and `run --watch` watches every target through one process. The config translates into the same builders shown below.
+
 ```ts
 import directoryLoader from '@teyfix/directory-loader';
 
@@ -53,8 +55,11 @@ flowchart LR
 |`types()`|Emit literal declarations alongside JSON, preserving message argument information.|
 |`split()`|Emit one JSON per top-level key rather than one aggregate JSON.|
 |`arb()`|Emit validated flat ARB files per locale into a dedicated directory; see the [ARB contract](docs/arb-output.md).|
+|`prepare(output)`|Stage validated data and serialized outputs without publishing; returns `{data, files, publish}`.|
 
 `source` contains the relative `file` and extension-free `path` segments. Codec parsing ends at native values; assembly does not interpret message strings. Defaults cover JSON/ARB, YAML, JSON5, JSONC, TOML, JSONL/NDJSON, and XML. Extension matching is case-insensitive. Unsupported extensions are skipped.
+
+`writeAll({name: {loader, output}, ...})` prepares separate builders together before publishing any target, and returns a watchable execution. `configure` from the optional `@teyfix/directory-loader/config` entrypoint interprets validated config objects through that coordinator. See [configuration and programmatic multi-output pipelines](docs/pipeline-config.md) for ownership, watch and failure semantics.
 
 ```ts
 const data = await directoryLoader('content')

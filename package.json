@@ -24,24 +24,31 @@
     "./icu": {
       "types": "./src/icu-validator.factory.ts",
       "import": "./src/icu-validator.factory.ts"
-    }
+    },
+    "./config": {
+      "types": "./src/pipeline-config.factory.ts",
+      "import": "./src/pipeline-config.factory.ts"
+    },
+    "./config.schema.json": "./config.schema.json"
   },
   "bin": {
     "directory-loader": "./src/directory-loader.cli.ts"
   },
   "files": [
     "src",
+    "config.schema.json",
     "README.md",
     "docs"
   ],
   "scripts": {
-    "build": "bun build src/directory-loader.factory.ts src/directory-loader.cli.ts src/icu-validator.factory.ts --target=bun --outdir=dist",
+    "build": "bun build src/directory-loader.factory.ts src/directory-loader.cli.ts src/icu-validator.factory.ts src/pipeline-config.factory.ts --target=bun --outdir=dist",
     "check": "bun check",
     "format": "bun run format:biome && bun run format:prettier",
     "format:biome": "bun --bun biome check --write src test integration",
     "format:check": "bun --bun biome check src test integration && bun --bun prettier --check .",
     "format:prettier": "bun --bun prettier --write .",
     "prepare": "bun --bun lefthook install",
+    "schema": "bun src/generate-config-schema.script.ts",
     "test": "bun test",
     "verify": "bun run format:check && bun run check && bun test && bun run build"
   },

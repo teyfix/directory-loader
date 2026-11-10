@@ -1,5 +1,5 @@
 import { extname, relative, resolve } from 'node:path';
-import { exportCatalogue } from './catalogue-export.utils';
+import { prepareCatalogue } from './catalogue-export.utils';
 import { type Codec, codecs, type Parser } from './codecs.registry';
 import { createMerger, isRecord, type Override } from './merge.utils';
 import { globPattern, relativePath } from './path-pattern.utils';
@@ -142,26 +142,33 @@ export default class DirectoryLoader {
   }
 
   private async writeOutput(output: string): Promise<Record<string, unknown>> {
+    const prepared = await this.prepare(output);
+    await prepared.publish();
+    return prepared.data;
+  }
+
+  async prepare(output: string, outputs: readonly string[] = [output]) {
     if (this.emitArb && this.emitTypes)
       throw new Error(
         'arb() cannot be combined with types(); emit JSON separately',
       );
-    if (this.root) {
-      const path = relative(this.root, resolve(output)).replaceAll('\\', '/');
+    for (const target of outputs) {
+      if (!this.root) break;
+      const path = relative(this.root, resolve(target)).replaceAll('\\', '/');
       if (!path) throw new Error('Output must not be the input directory');
-      this.exclude(this.splitOutput ? `${path}/**` : path);
-      if (!this.splitOutput)
+      this.exclude(path, `${path}/**`);
+      if (path.endsWith('.json'))
         this.exclude(path.replace(/\.json$/, '.d.json.ts'));
       this.exclude('**/*.outputs.json', '**/.directory-loader.outputs.json');
     }
     const data = await this.load();
-    await exportCatalogue(data, output, {
+    const publication = await prepareCatalogue(data, output, {
       types: this.emitTypes,
       split: this.splitOutput,
       arb: this.emitArb,
       source: (path) => this.sources.get(JSON.stringify(path)),
     });
-    return data;
+    return { data, ...publication };
   }
 
   openFiles(limit: number): this {

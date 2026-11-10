@@ -18,7 +18,7 @@ export async function writeChanged(
   }
 }
 
-export async function exportCatalogue(
+export async function prepareCatalogue(
   data: Record<string, unknown>,
   output: string,
   options: {
@@ -27,7 +27,7 @@ export async function exportCatalogue(
     arb?: boolean;
     source?: (path: string[]) => string | undefined;
   },
-): Promise<void> {
+): Promise<{ files: string[]; publish: () => Promise<void> }> {
   const files = new Map<string, string>();
   const add = (file: string, value: unknown) => {
     const json = JSON.stringify(value, null, 2);
@@ -85,10 +85,19 @@ export async function exportCatalogue(
     )
   )
     throw new Error(`Invalid output manifest: ${manifest}`);
-  for (const [file, content] of files) await writeChanged(file, content);
   const current = [...files.keys()].map((file) => basename(file));
-  for (const file of previous)
-    if (!current.includes(file))
-      await rm(join(directory, file), { force: true });
-  await writeChanged(manifest, `${JSON.stringify(current, null, 2)}\n`);
+  return {
+    files: [
+      ...files.keys(),
+      manifest,
+      ...previous.map((file) => join(directory, file)),
+    ],
+    async publish() {
+      for (const [file, content] of files) await writeChanged(file, content);
+      for (const file of previous)
+        if (!current.includes(file))
+          await rm(join(directory, file), { force: true });
+      await writeChanged(manifest, `${JSON.stringify(current, null, 2)}\n`);
+    },
+  };
 }

@@ -57,7 +57,7 @@ The exporter validates every locale and serializes the complete file set before 
 
 ## Verified consumers
 
-The authoritative [integration catalogue](../integration/messages) authors English and Turkish once. [generate.ts](../integration/generate.ts) derives nested JSON/literal declarations after removing metadata and validating ICU parity, and ARB after excluding the `web` namespace. Rich text remains authored once in `web`, reaches next-intl and is deliberately excluded from Flutter. No generated outputs are hand-edited or committed.
+The authoritative [integration catalogue](../integration/messages) authors English, Turkish and German once. The [shared configuration](../integration/.directory-loader.yaml) derives nested JSON/literal declarations after removing metadata and validating ICU parity, and ARB after excluding the `web` namespace. The [config runner](pipeline-config.md) prepares both targets before publishing either. Rich text remains authored once in `web`, reaches next-intl and is deliberately excluded from Flutter. No generated outputs are hand-edited or committed.
 
 Verified on 2026-11-10 with Bun **1.4.3**, Next **16.4.6**, next-intl **4.14.9**, React **19.3.1**, TypeScript **6.0.3**, Flutter **3.47.7** (framework `abaf9c5237`) and Dart **3.13.5**. Integration dependencies are isolated to the consumer fixtures; the exporter adds no runtime dependency. `flutter gen-l10n`, the generated Dart consumer's interpolation/plural/select test and `flutter analyze` pass. The real Next App Router server renders both locales with interpolation, plural/select and rich links; TypeScript verifies valid calls and expected errors for unknown keys, missing arguments/tags and nonnumeric plural arguments. Shared-catalogue regression tests reject missing locales and argument/rich-tag parity changes.
 
@@ -69,7 +69,7 @@ Reproduce from the repository root with Docker/Compose and a Flutter SDK at `$FL
 mkdir -p .cache/bun .cache/flutter
 docker compose build bun
 docker compose run --rm bun install --frozen-lockfile
-docker compose run --rm bun integration/generate.ts
+docker compose run --rm bun src/directory-loader.cli.ts run integration/.directory-loader.yaml
 docker compose run --rm bun install --cwd integration/next --frozen-lockfile
 docker compose run --rm bun --cwd integration/next --bun tsc --noEmit
 docker compose run --rm bun --cwd integration/next verify.ts

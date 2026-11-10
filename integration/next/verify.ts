@@ -27,17 +27,22 @@ try {
   for (const text of [
     'Hello Ada',
     'Merhaba Ada',
+    'Hallo Ada',
     'One item',
     'Many items',
     'Öğeler',
+    'Ein Element',
+    'Viele Elemente',
+    'Mitglied',
     'Administrator',
     'Yönetici',
     '<a href="/guide">the guide</a>',
     '<a href="/guide">Kılavuzu</a>',
+    '<a href="/guide">die Anleitung</a>',
   ])
     assert.ok(html.includes(text), `Missing rendered translation: ${text}`);
   console.log(
-    'Next/next-intl SSR interpolation, plural/select and rich text passed for en/tr.',
+    'Next/next-intl SSR interpolation, plural/select and rich text passed for en/tr/de.',
   );
 } finally {
   child.kill();
