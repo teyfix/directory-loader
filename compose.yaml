@@ -1,2 +1,3 @@
 include:
   - svc/bun/compose.yaml
+  - svc/flutter/compose.yaml

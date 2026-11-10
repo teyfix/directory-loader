@@ -4,6 +4,12 @@ dist/
 .state/
 bun.lock
 coverage/
+integration/next/.next/
+integration/next/generated/
+integration/flutter/.dart_tool/
+integration/flutter/build/
+integration/flutter/lib/l10n/
+integration/flutter/pubspec.lock
 **/*.js
 **/*.jsx
 **/*.ts

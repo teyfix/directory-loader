@@ -1,0 +1,17 @@
+greeting: 'Merhaba {name}'
+'@greeting':
+  description: Oturum açan kişiyi selamla
+  placeholders:
+    name:
+      type: String
+      example: Ada
+items: '{count, plural, other {Öğeler}}'
+'@items':
+  placeholders:
+    count:
+      type: int
+choice: '{role, select, admin {Yönetici} other {Üye}}'
+'@choice':
+  placeholders:
+    role:
+      type: String

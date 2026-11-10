@@ -1,0 +1,17 @@
+services:
+  flutter:
+    image: directory-loader:tools
+    working_dir: /workspace/integration/flutter
+    user: '${BUN_UID:-1000}:${BUN_GID:-1000}'
+    init: true
+    cpus: 2
+    mem_limit: 2g
+    environment:
+      HOME: /home/bun
+      PUB_CACHE: /cache/pub
+      FLUTTER_ROOT: /opt/flutter
+    volumes:
+      - ${PWD}:/workspace
+      - ${FLUTTER_SDK:-/home/dixie/.local/opt/flutter}:/opt/flutter
+      - ${PWD}/.cache/flutter:/cache
+    entrypoint: [/opt/flutter/bin/flutter]
