@@ -5,8 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.3
-      - run: bun install --frozen-lockfile
-      - run: bun run verify
+      - name: Prepare tooling directories and user
+        run: |
+          mkdir -p .cache/bun
+          echo "BUN_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "BUN_GID=$(id -g)" >> "$GITHUB_ENV"
+      - run: docker compose build bun
+      - run: docker compose run --rm bun install --frozen-lockfile
+      - run: docker compose run --rm bun run verify

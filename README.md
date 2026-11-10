@@ -149,4 +149,4 @@ docker compose run --rm bun run format
 docker compose run --rm bun run verify
 ```
 
-Bun owns tests, typechecking, and builds. Biome owns TypeScript; Prettier with `.prettierrc.yaml` owns the other supported formats. Normal installation installs Lefthook; staged hooks delegate formatting to the same Compose service. Source filenames use `kebab-case.kind.ts`. Git consumers import the TypeScript source directly; the optional build emits Bun-targeted bundles into ignored `dist/`. CI checks changes and never publishes to npm.
+Bun owns tests, typechecking, and builds. The tooling image includes watchexec 2.8.0; watch tests are required and fail when it is missing. CI uses the same Compose build and verification commands. Biome owns TypeScript; Prettier with `.prettierrc.yaml` owns the other supported formats. Normal installation installs Lefthook; staged hooks delegate formatting to the same Compose service. Source filenames use `kebab-case.kind.ts`. Git consumers import the TypeScript source directly; the optional build emits Bun-targeted bundles into ignored `dist/`. CI checks changes and never publishes to npm.
