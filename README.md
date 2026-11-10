@@ -52,6 +52,7 @@ flowchart LR
 |`maxFiles(limit)`|Limit the number of discovered files loaded; default unlimited.|
 |`types()`|Emit literal declarations alongside JSON, preserving message argument information.|
 |`split()`|Emit one JSON per top-level key rather than one aggregate JSON.|
+|`arb()`|Emit validated flat ARB files per locale into a dedicated directory; see the [ARB contract](docs/arb-output.md).|
 
 `source` contains the relative `file` and extension-free `path` segments. Codec parsing ends at native values; assembly does not interpret message strings. Defaults cover JSON/ARB, YAML, JSON5, JSONC, TOML, JSONL/NDJSON, and XML. Extension matching is case-insensitive. Unsupported extensions are skipped.
 

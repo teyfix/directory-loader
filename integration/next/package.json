@@ -1,0 +1,16 @@
+{
+  "name": "directory-loader-next-consumer",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "next": "16.4.6",
+    "next-intl": "4.14.9",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^6.0.0"
+  }
+}

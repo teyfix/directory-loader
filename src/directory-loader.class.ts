@@ -22,6 +22,8 @@ export default class DirectoryLoader {
   private readonly mappers: Mapper[] = [];
   private emitTypes = false;
   private splitOutput = false;
+  private emitArb = false;
+  private readonly sources = new Map<string, string>();
   private readonly mounts: PathTransform[] = [];
   private readonly validators: Validator[] = [];
   private warning = (event: Override) =>
@@ -129,11 +131,21 @@ export default class DirectoryLoader {
     return this;
   }
 
+  arb(): this {
+    this.emitArb = true;
+    this.splitOutput = true;
+    return this;
+  }
+
   write(output: string): Execution {
     return Object.assign(this.writeOutput(output), { loader: this });
   }
 
   private async writeOutput(output: string): Promise<Record<string, unknown>> {
+    if (this.emitArb && this.emitTypes)
+      throw new Error(
+        'arb() cannot be combined with types(); emit JSON separately',
+      );
     if (this.root) {
       const path = relative(this.root, resolve(output)).replaceAll('\\', '/');
       if (!path) throw new Error('Output must not be the input directory');
@@ -146,6 +158,8 @@ export default class DirectoryLoader {
     await exportCatalogue(data, output, {
       types: this.emitTypes,
       split: this.splitOutput,
+      arb: this.emitArb,
+      source: (path) => this.sources.get(JSON.stringify(path)),
     });
     return data;
   }
@@ -198,6 +212,7 @@ export default class DirectoryLoader {
       )
       .slice(0, this.maxFileLimit);
     let result: Record<string, unknown> = {};
+    this.sources.clear();
     const merge = createMerger(this.warning);
     for (let start = 0; start < sorted.length; start += this.openFilesLimit) {
       const batch = await Promise.all(
@@ -229,8 +244,28 @@ export default class DirectoryLoader {
           }
         }),
       );
-      for (const { source, contribution } of batch)
+      for (const { source, contribution } of batch) {
+        if (this.emitArb) {
+          const remember = (value: unknown, path: string[]) => {
+            const key = JSON.stringify(path);
+            const previous = this.sources.get(key);
+            if (
+              previous &&
+              typeof value === 'string' &&
+              !path.some((key) => key.startsWith('@'))
+            )
+              throw new Error(
+                `${source.file}: ${path.join('.')}: duplicate ARB message from ${previous}`,
+              );
+            this.sources.set(key, source.file);
+            if (isRecord(value))
+              for (const [key, child] of Object.entries(value))
+                remember(child, [...path, key]);
+          };
+          remember(contribution, []);
+        }
         result = merge(result, contribution, source.file);
+      }
     }
     for (const validator of this.validators) await validator(result);
     return result;

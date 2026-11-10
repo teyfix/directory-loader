@@ -4,3 +4,9 @@ dist/
 .state/
 coverage/
 *.tsbuildinfo
+integration/next/generated/
+integration/next/.next/
+integration/next/next-env.d.ts
+integration/flutter/.dart_tool/
+integration/flutter/build/
+integration/flutter/lib/l10n/
