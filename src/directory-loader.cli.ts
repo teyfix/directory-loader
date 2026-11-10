@@ -59,7 +59,7 @@ export async function main(args = Bun.argv.slice(2)): Promise<void> {
     defineCommand({
       name: 'run',
       description:
-        'Execute a pipeline file and optionally watch its discovered inputs.',
+        'Run a YAML config or TypeScript pipeline; defaults to .directory-loader.yaml.',
       options: {
         watch: option(z.boolean().default(false), {
           short: 'w',
@@ -68,8 +68,10 @@ export async function main(args = Bun.argv.slice(2)): Promise<void> {
         }),
       },
       handler: async ({ positional, flags, signal }) => {
-        const file = z.array(z.string()).length(1).parse(positional)[0];
-        if (file) await runPipeline(file, flags.watch, signal);
+        const file =
+          z.array(z.string()).max(1).parse(positional)[0] ??
+          '.directory-loader.yaml';
+        await runPipeline(file, flags.watch, signal);
       },
     }),
   );

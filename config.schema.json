@@ -1,0 +1,388 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "exclude": {
+      "items": { "minLength": 1, "type": "string" },
+      "type": "array"
+    },
+    "files": {
+      "items": { "minLength": 1, "type": "string" },
+      "minItems": 1,
+      "type": "array"
+    },
+    "metadata": { "enum": ["preserve", "omit"], "type": "string" },
+    "outputs": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "directory": { "minLength": 1, "type": "string" },
+              "exclude": {
+                "items": { "minLength": 1, "type": "string" },
+                "type": "array"
+              },
+              "files": {
+                "items": { "minLength": 1, "type": "string" },
+                "minItems": 1,
+                "type": "array"
+              },
+              "format": { "const": "json", "type": "string" },
+              "metadata": { "enum": ["preserve", "omit"], "type": "string" },
+              "path": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "strip": {
+                          "items": { "minLength": 1, "type": "string" },
+                          "minItems": 1,
+                          "type": "array"
+                        }
+                      },
+                      "required": ["strip"],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "recase": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "casing": {
+                              "enum": ["camel", "kebab", "pascal", "snake"],
+                              "type": "string"
+                            },
+                            "skip": {
+                              "default": 0,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          },
+                          "required": ["casing", "skip"],
+                          "type": "object"
+                        }
+                      },
+                      "required": ["recase"],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "redirect": {
+                          "additionalProperties": { "type": "string" },
+                          "propertyNames": { "minLength": 1, "type": "string" },
+                          "type": "object"
+                        }
+                      },
+                      "required": ["redirect"],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              "types": { "default": false, "type": "boolean" },
+              "validation": {
+                "additionalProperties": false,
+                "properties": {
+                  "icu": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "locales": {
+                        "items": { "minLength": 1, "type": "string" },
+                        "minItems": 1,
+                        "type": "array"
+                      },
+                      "referenceLocale": { "minLength": 1, "type": "string" }
+                    },
+                    "required": ["referenceLocale"],
+                    "type": "object"
+                  }
+                },
+                "required": ["icu"],
+                "type": "object"
+              }
+            },
+            "required": ["format", "directory", "types"],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "exclude": {
+                "items": { "minLength": 1, "type": "string" },
+                "type": "array"
+              },
+              "file": { "minLength": 1, "type": "string" },
+              "files": {
+                "items": { "minLength": 1, "type": "string" },
+                "minItems": 1,
+                "type": "array"
+              },
+              "format": { "const": "json", "type": "string" },
+              "metadata": { "enum": ["preserve", "omit"], "type": "string" },
+              "path": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "strip": {
+                          "items": { "minLength": 1, "type": "string" },
+                          "minItems": 1,
+                          "type": "array"
+                        }
+                      },
+                      "required": ["strip"],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "recase": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "casing": {
+                              "enum": ["camel", "kebab", "pascal", "snake"],
+                              "type": "string"
+                            },
+                            "skip": {
+                              "default": 0,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          },
+                          "required": ["casing", "skip"],
+                          "type": "object"
+                        }
+                      },
+                      "required": ["recase"],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "redirect": {
+                          "additionalProperties": { "type": "string" },
+                          "propertyNames": { "minLength": 1, "type": "string" },
+                          "type": "object"
+                        }
+                      },
+                      "required": ["redirect"],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              "types": { "default": false, "type": "boolean" },
+              "validation": {
+                "additionalProperties": false,
+                "properties": {
+                  "icu": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "locales": {
+                        "items": { "minLength": 1, "type": "string" },
+                        "minItems": 1,
+                        "type": "array"
+                      },
+                      "referenceLocale": { "minLength": 1, "type": "string" }
+                    },
+                    "required": ["referenceLocale"],
+                    "type": "object"
+                  }
+                },
+                "required": ["icu"],
+                "type": "object"
+              }
+            },
+            "required": ["format", "file", "types"],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "directory": { "minLength": 1, "type": "string" },
+              "exclude": {
+                "items": { "minLength": 1, "type": "string" },
+                "type": "array"
+              },
+              "files": {
+                "items": { "minLength": 1, "type": "string" },
+                "minItems": 1,
+                "type": "array"
+              },
+              "format": { "const": "arb", "type": "string" },
+              "metadata": { "enum": ["preserve", "omit"], "type": "string" },
+              "path": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "strip": {
+                          "items": { "minLength": 1, "type": "string" },
+                          "minItems": 1,
+                          "type": "array"
+                        }
+                      },
+                      "required": ["strip"],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "recase": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "casing": {
+                              "enum": ["camel", "kebab", "pascal", "snake"],
+                              "type": "string"
+                            },
+                            "skip": {
+                              "default": 0,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          },
+                          "required": ["casing", "skip"],
+                          "type": "object"
+                        }
+                      },
+                      "required": ["recase"],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "redirect": {
+                          "additionalProperties": { "type": "string" },
+                          "propertyNames": { "minLength": 1, "type": "string" },
+                          "type": "object"
+                        }
+                      },
+                      "required": ["redirect"],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              "validation": {
+                "additionalProperties": false,
+                "properties": {
+                  "icu": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "locales": {
+                        "items": { "minLength": 1, "type": "string" },
+                        "minItems": 1,
+                        "type": "array"
+                      },
+                      "referenceLocale": { "minLength": 1, "type": "string" }
+                    },
+                    "required": ["referenceLocale"],
+                    "type": "object"
+                  }
+                },
+                "required": ["icu"],
+                "type": "object"
+              }
+            },
+            "required": ["format", "directory"],
+            "type": "object"
+          }
+        ]
+      },
+      "minProperties": 1,
+      "propertyNames": { "minLength": 1, "type": "string" },
+      "type": "object"
+    },
+    "path": {
+      "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "strip": {
+                "items": { "minLength": 1, "type": "string" },
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": ["strip"],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "recase": {
+                "additionalProperties": false,
+                "properties": {
+                  "casing": {
+                    "enum": ["camel", "kebab", "pascal", "snake"],
+                    "type": "string"
+                  },
+                  "skip": {
+                    "default": 0,
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": ["casing", "skip"],
+                "type": "object"
+              }
+            },
+            "required": ["recase"],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "redirect": {
+                "additionalProperties": { "type": "string" },
+                "propertyNames": { "minLength": 1, "type": "string" },
+                "type": "object"
+              }
+            },
+            "required": ["redirect"],
+            "type": "object"
+          }
+        ]
+      },
+      "type": "array"
+    },
+    "root": { "minLength": 1, "type": "string" },
+    "validation": {
+      "additionalProperties": false,
+      "properties": {
+        "icu": {
+          "additionalProperties": false,
+          "properties": {
+            "locales": {
+              "items": { "minLength": 1, "type": "string" },
+              "minItems": 1,
+              "type": "array"
+            },
+            "referenceLocale": { "minLength": 1, "type": "string" }
+          },
+          "required": ["referenceLocale"],
+          "type": "object"
+        }
+      },
+      "required": ["icu"],
+      "type": "object"
+    }
+  },
+  "required": ["root", "outputs"],
+  "type": "object"
+}

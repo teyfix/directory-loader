@@ -1,6 +1,7 @@
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type DirectoryLoader from './directory-loader.class';
+import { configSchema, configure } from './pipeline-config.factory';
 import { watchFiles } from './watch-command.utils';
 
 export async function runPipeline(
@@ -15,11 +16,41 @@ export async function runPipeline(
   let failure: { error: unknown } | undefined;
   process.chdir(cwd);
   try {
-    const pipeline = await import(pathToFileURL(script).href);
-    const execution =
-      typeof pipeline.default === 'function'
-        ? pipeline.default()
-        : pipeline.default;
+    let execution:
+      | (Promise<unknown> & { loader: Pick<DirectoryLoader, 'watchPlan'> })
+      | undefined;
+    if (/\.ya?ml$/i.test(script)) {
+      try {
+        const config = configSchema.parse(
+          Bun.YAML.parse(await Bun.file(script).text()),
+        );
+        const source = relative(resolve(cwd, config.root), script).replaceAll(
+          '\\',
+          '/',
+        );
+        execution = configure(
+          {
+            ...config,
+            exclude: [
+              ...(config.exclude ?? []),
+              source.replace(/[*?[\]{}]/g, '\\$&'),
+            ],
+          },
+          cwd,
+        );
+      } catch (error) {
+        throw new Error(
+          `Invalid pipeline config: ${script}: ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error },
+        );
+      }
+    } else {
+      const pipeline = await import(pathToFileURL(script).href);
+      execution =
+        typeof pipeline.default === 'function'
+          ? pipeline.default()
+          : pipeline.default;
+    }
     if (typeof execution?.loader?.watchPlan === 'function')
       loader = execution.loader;
     await execution;
@@ -34,14 +65,16 @@ export async function runPipeline(
   }
   if (!loader)
     throw new Error(
-      'Watch requires a default export of the load() or write() execution',
+      'Watch requires a valid YAML config or a default export of a load(), write() or writeAll() execution',
     );
   if (failure) console.error(failure.error);
   // shortcut: inputs are discovered once; restart watch after changing pipeline source roots.
   const plan = loader.watchPlan();
   process.exitCode = await watchFiles({
     inputs: [script, ...plan.inputs],
-    excluded: plan.excluded,
+    excluded: plan.excluded.filter(
+      (pattern) => !new Bun.Glob(pattern).match(script),
+    ),
     command: [
       process.execPath,
       resolve(Bun.argv[1] ?? import.meta.path),

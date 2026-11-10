@@ -1,0 +1,17 @@
+greeting: 'Hallo {name}'
+'@greeting':
+  description: Angemeldete Person begrüßen
+  placeholders:
+    name:
+      type: String
+      example: Ada
+items: '{count, plural, one {Ein Element} other {Viele Elemente}}'
+'@items':
+  placeholders:
+    count:
+      type: int
+choice: '{role, select, admin {Administrator} other {Mitglied}}'
+'@choice':
+  placeholders:
+    role:
+      type: String

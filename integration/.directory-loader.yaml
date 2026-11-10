@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../config.schema.json
+root: messages
+files: ['[lang].yaml', '[lang]/**/*.yaml']
+validation:
+  icu:
+    referenceLocale: en
+    locales: [en, tr, de]
+outputs:
+  web:
+    format: json
+    directory: next/generated
+    types: true
+    metadata: omit
+  mobile:
+    format: arb
+    directory: flutter/lib/l10n
+    exclude: ['**/web.yaml']

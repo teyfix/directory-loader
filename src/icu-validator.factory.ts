@@ -8,6 +8,19 @@ import { isRecord } from './merge.utils';
 
 type Signature = [string, string[]][];
 
+export function stripMessageMetadata(
+  value: Record<string, unknown>,
+): Record<string, unknown>;
+export function stripMessageMetadata(value: unknown): unknown;
+export function stripMessageMetadata(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !key.startsWith('@'))
+      .map(([key, item]) => [key, stripMessageMetadata(item)]),
+  );
+}
+
 function signature(elements: MessageFormatElement[]): Signature {
   const argumentsByName = new Map<string, Set<string>>();
   function visit(items: MessageFormatElement[]) {
